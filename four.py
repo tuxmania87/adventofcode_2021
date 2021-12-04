@@ -1,65 +1,112 @@
+import itertools
+
 # Part 1
 f = open("four_input.txt","r")
 
 
-line_number = 0
+first_line = True
 
 
-number_list = list()
+draw_sequence = list()
 
-boards = list()
+all_boards = list()
 board = list()
 
-drawn_numbers = list()
+
 
 for line in f.readlines():
-    if line_number == 0:
+    if first_line:
 
-        number_list = [int(x) for x in line.split(",")]
+        draw_sequence = [int(x) for x in line.split(",")]
 
     elif line == "\n":
         if len(board) > 0:
-            boards.append(board)
+            all_boards.append(board)
         board = list()
     else:
         board.append([int(x) for x in line.split()])
 
+    first_line = False
 
 
-    line_number += 1
+def find_bingo(number_list, boards, abort_after_first_win):
 
-print(boards)
+    drawn_numbers = list()
 
-for current_number in number_list:
+    winner_list = list()
 
-    drawn_numbers.append(current_number)
+    for current_number in number_list:
 
-    # search all boards
-    
+        drawn_numbers.append(current_number)
 
-    for board in boards:
+        # search all boards
 
-        # look for all rows if matching 100%  
-        for row in board:
+        board_counter = 0
+        for board in boards:
+            board_counter += 1
 
-            print(row, drawn_numbers)
+            # look for all rows if matching 100%  
+            for row in board:
 
-            if set(row) == set(drawn_numbers):
+                if set(row) - set(drawn_numbers) == set():
 
-                # winner found, sum all other rows and 
-                # multiply by last drawn number
+                    # winner found, sum all unmarked numbers
+                    # take all numbers in one big set and substract drawn_numbers
 
-                sum = 0
-                for row_it in board:
-                    if row_it != row:
-                        sum += sum(row_it)
+                    all_numbers = list(itertools.chain.from_iterable(board))
 
+                    bingo_number = sum(list(set(all_numbers) - set(drawn_numbers))) * current_number
 
-                print("BINGO", sum * current_number)
+                    if board_counter not in winner_list:
+                        winner_list.append(board_counter)
+
+                    # check if all boards have won now
+                    if len(winner_list) == len(boards):
+                        # this winner is the last one
+                        print("Last Winner", bingo_number, board_counter)
+                        return bingo_number
+                    
+                    if abort_after_first_win:
+                        return bingo_number
             
-        
-        
+            # do the same for columns by transposing rows into columns
 
+            transposed_board = list(map(list, zip(*board)))
+            for row in transposed_board:
+
+                if set(row) - set(drawn_numbers) == set():
+
+                    # winner found, sum all unmarked numbers
+                    # take all numbers in one big set and substract drawn_numbers
+
+                    all_numbers = list(itertools.chain.from_iterable(board))
+
+                    bingo_number = sum(list(set(all_numbers) - set(drawn_numbers))) * current_number
+
+                    if board_counter not in winner_list:
+                        winner_list.append(board_counter)
+
+                    # check if all boards have won now
+                    if len(winner_list) == len(boards):
+                        # this winner is the last one
+                        print("Last Winner", bingo_number, board_counter)
+                        return bingo_number
+
+
+                    
+                    if abort_after_first_win:
+                        return bingo_number
+
+
+
+
+
+
+print(find_bingo(draw_sequence, all_boards, True))
+
+print("Part two")
+
+find_bingo(draw_sequence, all_boards, False)
 
 
 
